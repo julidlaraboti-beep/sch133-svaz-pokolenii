@@ -2,6 +2,7 @@
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import pool from './db.js';
+import { initAll } from './init.js';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -10,6 +11,8 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 async function main() {
   try {
+    await initAll();
+
     const username = process.env.ADMIN_USERNAME || 'admin';
     const password = process.env.ADMIN_PASSWORD;
 

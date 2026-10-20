@@ -7,60 +7,11 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import pool from './db.js';
+import { initAll } from './init.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.API_PORT || 3001);
-
-async function ensureProjectColumns() {
-  // Создаём базовые таблицы при первом запуске, если база данных уже создана в MySQL.
-  await pool.execute(`CREATE TABLE IF NOT EXISTS projects (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    description LONGTEXT NOT NULL,
-    author VARCHAR(150) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    image_url VARCHAR(1000) NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    topic VARCHAR(80) NULL,
-    project_type VARCHAR(40) NOT NULL DEFAULT 'photo',
-    media_url VARCHAR(1000) NULL,
-    before_image_url VARCHAR(1000) NULL,
-    after_image_url VARCHAR(1000) NULL,
-    author_role VARCHAR(150) NULL,
-    project_date VARCHAR(80) NULL,
-    source_info VARCHAR(500) NULL,
-    tags_json TEXT NULL,
-    gallery_json TEXT NULL
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
-  await pool.execute(`CREATE TABLE IF NOT EXISTS admins (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(80) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
-
-  const columns = {
-    topic: "VARCHAR(80) NULL",
-    project_type: "VARCHAR(40) NOT NULL DEFAULT 'photo'",
-    media_url: 'VARCHAR(1000) NULL',
-    before_image_url: 'VARCHAR(1000) NULL',
-    after_image_url: 'VARCHAR(1000) NULL',
-    author_role: 'VARCHAR(150) NULL',
-    project_date: 'VARCHAR(80) NULL',
-    source_info: 'VARCHAR(500) NULL',
-    tags_json: 'TEXT NULL',
-    gallery_json: 'TEXT NULL',
-  };
-  const [existing] = await pool.execute('SHOW COLUMNS FROM projects');
-  const names = new Set(existing.map((column) => column.Field));
-  for (const [name, definition] of Object.entries(columns)) {
-    if (!names.has(name)) {
-      await pool.execute(`ALTER TABLE projects ADD COLUMN ${name} ${definition}`);
-    }
-  }
-}
 
 function withProjectTags(project) {
   let tags = [];
@@ -566,11 +517,11 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Внутренняя ошибка сервера' });
 });
 
-ensureProjectColumns()
+initAll()
   .then(() => {
     app.listen(PORT, () => console.log(`API сервер запущен: http://localhost:${PORT}`));
   })
   .catch((error) => {
-    console.error('Не удалось подготовить таблицу projects:', error);
+    console.error('Не удалось инициализировать базу данных:', error.message);
     process.exitCode = 1;
   });

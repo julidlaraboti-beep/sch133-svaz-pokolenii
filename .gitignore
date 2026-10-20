@@ -23,9 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 *.sql
+!server/seed.sql
+!server/setup-user.sql
 
 # Secrets
 .env
 
 # User uploads
 server/uploads/
+
+# Генерируемые данные автономной сборки (создаётся npm run dev / npm run build)
+src/data/standalone-projects.json
