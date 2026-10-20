@@ -7,12 +7,14 @@ import mysql from 'mysql2/promise';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '.env');
 
-if (!fs.existsSync(envPath)) {
-  fs.copyFileSync(path.join(__dirname, '.env.example'), envPath);
-  console.log('Создан server/.env из server/.env.example — при необходимости поправьте значения.');
-}
+if (process.env.NODE_ENV !== 'production') {
+  if (!fs.existsSync(envPath)) {
+    fs.copyFileSync(path.join(__dirname, '.env.example'), envPath);
+    console.log('Создан server/.env из server/.env.example — при необходимости поправьте значения.');
+  }
 
-dotenv.config({ path: envPath, override: false });
+  dotenv.config({ path: envPath, override: false });
+}
 
 console.log('DB config:', {
   host: process.env.DB_HOST || '(не задан)',
