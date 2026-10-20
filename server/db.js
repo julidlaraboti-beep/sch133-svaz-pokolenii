@@ -12,7 +12,15 @@ if (!fs.existsSync(envPath)) {
   console.log('Создан server/.env из server/.env.example — при необходимости поправьте значения.');
 }
 
-dotenv.config({ path: envPath });
+dotenv.config({ path: envPath, override: false });
+
+console.log('DB config:', {
+  host: process.env.DB_HOST || '(не задан)',
+  port: process.env.DB_PORT || '(не задан)',
+  database: process.env.DB_NAME || '(не задан)',
+  user: process.env.DB_USER || '(не задан)',
+});
+
 
 export const DB_NAME = process.env.DB_NAME || 'svyaz_pokoleniy';
 
